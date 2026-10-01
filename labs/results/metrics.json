@@ -1,0 +1,94 @@
+{
+  "runtime": {
+    "python": "3.12.14",
+    "numpy": "2.5.3",
+    "matplotlib": "3.11.2"
+  },
+  "ridge": {
+    "seed": 1101,
+    "n": 40,
+    "d": 65,
+    "selected_lambda": 0.8353625469578262,
+    "test_half_mse": 4.287973376337416,
+    "minimum_training_increment": 8.319833347449657e-10
+  },
+  "double_descent": {
+    "seed": 1102,
+    "n": 30,
+    "repetitions": 240,
+    "critical_dimensions": [
+      29,
+      30,
+      31
+    ],
+    "max_relative_mean_error_away_from_peak": 0.02851934254604349,
+    "max_training_mse_after_interpolation": 1.614938450422176e-25
+  },
+  "gd": {
+    "eigenvalues": [
+      1,
+      9
+    ],
+    "steps": [
+      {
+        "step": 0.08,
+        "q": 0.92,
+        "final_gap": 2.2568842502151307e-05
+      },
+      {
+        "step": 0.1111111111111111,
+        "q": 0.8888888888888888,
+        "final_gap": 3.6363636738792536e-07
+      },
+      {
+        "step": 0.2,
+        "q": 0.8,
+        "final_gap": 1.174271291386936e-11
+      },
+      {
+        "step": 0.2222222222222222,
+        "q": 1.0,
+        "final_gap": 4.50000000000004
+      },
+      {
+        "step": 0.24,
+        "q": 1.1600000000000001,
+        "final_gap": 244439406.73947954
+      }
+    ]
+  },
+  "sgd": {
+    "seed": 1103,
+    "paths": 12000,
+    "updates": 300,
+    "exact_stationary_objective": 0.04411764705882353,
+    "mc_final_fixed": 0.04420638008333513,
+    "mc_final_decay": 0.0011015322646888918,
+    "exact_final_decay": 0.0010984517164519172
+  },
+  "uncertainty": {
+    "seed": 1104,
+    "paths": 5000,
+    "updates": 5000,
+    "methods": [
+      {
+        "method": "Final: gain 0.5 / t",
+        "theoretical_limit_variance": 0.25,
+        "empirical_scaled_variance": 0.24670279948740415,
+        "empirical_scaled_mean": -0.002546918597304598
+      },
+      {
+        "method": "Final: gain 1.0 / t",
+        "theoretical_limit_variance": 0.3333333333333333,
+        "empirical_scaled_variance": 0.3373140660390095,
+        "empirical_scaled_mean": 0.0017590995141594434
+      },
+      {
+        "method": "PR average: 0.5 / t^0.7",
+        "theoretical_limit_variance": 0.25,
+        "empirical_scaled_variance": 0.25644637763079375,
+        "empirical_scaled_mean": 0.009431449112503367
+      }
+    ]
+  }
+}
