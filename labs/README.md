@@ -2,7 +2,7 @@
 
 [Home](../README.md) · [Recorded results](RESULTS.md)
 
-Run `python labs/run_all.py` from the repository root after installing `requirements.txt`. It generates five experiments in one deterministic-seed run, writes CSV measurements and JSON metadata under `labs/results/`, and regenerates this edition's plots. No external dataset, network request, API key, or original PDF is needed by the code.
+Run `python labs/run_all.py` from the repository root after installing `requirements.txt`. It generates five experiments and a double-descent tail diagnostic in one deterministic-seed run, writes CSV measurements and JSON metadata under `labs/results/`, and regenerates this edition's plots. No external dataset, network request, API key, or original PDF is needed by the code.
 
 ## 1. Ridge and selection
 
@@ -19,6 +19,16 @@ Change the noise scale or the number of observations and explain why the selecte
 Each repetition draws one full design and retains increasing prefixes of its columns. The true coefficient vector and sample size stay fixed. Conditional test risk is evaluated analytically as noise plus omitted energy plus squared coefficient error, avoiding a second layer of test-sample Monte Carlo noise.
 
 The blue line is the finite theoretical expectation. Critical dimensions are shaded and the curve is broken there. Orange points are means of finitely many realized risks; the dotted median estimates a different population quantity. The mean can be dominated by rare nearly singular designs. Re-running with more repetitions near interpolation is not guaranteed to stabilize a nonexistent finite expectation.
+
+### Follow the tail, not only the curve
+
+![Running means around interpolation](../assets/double-descent-tails.png)
+
+The additional diagnostic fixes the same signal/noise, compares n = 30 and 60, and follows d − n = −8, −2, −1, 0, 1, 2, 8 through 1,200 independent repetitions per sample size. Dashed lines are finite theoretical expectations. The middle panels intentionally have no finite target. Repetition budgets 40, 240, and 1,200 are nested prefixes of each stream; they do not constitute independent repetitions of a whole Monte Carlo study.
+
+Inspect [the recorded report](RESULTS.md) for near-threshold discrepancies, quantiles and the contribution from the largest 1% of risks. [Raw risks and solver ranks](results/double_descent_tail_risks.csv), [running means](results/double_descent_running_means.csv), and [checkpoints](results/double_descent_checkpoints.csv) let readers check those summaries. Even the original 240-draw curve now saves [individual risks](results/double_descent_risks.csv).
+
+When expected risk is finite, the strong law explains eventual convergence but does not guarantee accuracy at these budgets. With nonnegative iid risks of infinite mean, the running mean diverges almost surely; a flat finite prefix is not evidence for a finite expectation. No conventional mean confidence intervals are inferred. The Gaussian identity assumes independent unit-variance coordinates. Correlation changes the test covariance term and omitted-noise dependence; default numerical rank truncation, ridge, and zero effective noise at critical dimensions also change what must be analyzed.
 
 Try putting all signal energy in late coordinates. Predict whether the initial descent survives before changing the code.
 

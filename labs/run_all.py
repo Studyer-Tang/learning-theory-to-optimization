@@ -16,6 +16,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from core import (gaussian_test_mse, quadratic_gaps, quadratic_gd, ridge,
+                  realized_isotropic_test_mse, risk_diagnostics,
                   scalar_clt_variance, scalar_stationary_objective)
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -84,10 +85,13 @@ def double_descent_lab():
         y = X @ truth + rng.normal(scale=np.sqrt(noise), size=n)
         for j, d in enumerate(dims):
             fit = np.linalg.lstsq(X[:, :d], y, rcond=None)[0]
-            samples[r, j] = noise + np.sum(truth[d:] ** 2) + np.sum((fit - truth[:d]) ** 2)
+            samples[r, j] = realized_isotropic_test_mse(fit, truth, noise)
             training[r, j] = np.mean((X[:, :d] @ fit - y) ** 2)
     theoretical = np.array([gaussian_test_mse(n, int(d), truth, noise) for d in dims])
     means, medians = samples.mean(axis=0), np.median(samples, axis=0)
+    csv_save("double_descent_risks", ["replicate", "d", "test_mse", "training_mse"],
+             ((r + 1, int(d), samples[r, j], training[r, j])
+              for r in range(repetitions) for j, d in enumerate(dims)))
     csv_save("double_descent", ["d", "theoretical_test_mse", "finite_run_mean_test_mse",
                                 "finite_run_median_test_mse", "mean_training_mse"],
              zip(dims, theoretical, means, medians, training.mean(axis=0)))
@@ -108,6 +112,84 @@ def double_descent_lab():
             "critical_dimensions": [29, 30, 31],
             "max_relative_mean_error_away_from_peak": float(np.max(relative)),
             "max_training_mse_after_interpolation": float(training[:, dims >= n].max())}
+
+
+def double_descent_tail_lab():
+    """Nested repetition budgets and two sample sizes around interpolation.
+
+    Each n has an independent stream. Dimensions within a replicate share X/y;
+    they are paired comparisons, not independent experiments.
+    """
+    repetitions, noise = 1200, 0.25
+    offsets = np.array([-8, -2, -1, 0, 1, 2, 8])
+    budgets = [40, 240, repetitions]
+    raw_rows, running_rows, checkpoint_rows, summaries = [], [], [], []
+    fig, axes = plt.subplots(2, 3, figsize=(13, 7.5), layout="constrained")
+    for row, (n, seed) in enumerate([(30, 2102), (60, 2103)]):
+        rng = np.random.default_rng(seed)
+        dims = n + offsets
+        truth = np.zeros(int(dims[-1]))
+        truth[:5] = [2, 1.5, 1, 0.7, 0.4]
+        samples = np.zeros((repetitions, len(dims)))
+        ranks = np.zeros_like(samples, dtype=int)
+        for r in range(repetitions):
+            X = rng.normal(size=(n, len(truth)))
+            y = X @ truth + rng.normal(scale=np.sqrt(noise), size=n)
+            for j, d in enumerate(dims):
+                fit, _, rank, singular = np.linalg.lstsq(X[:, :d], y, rcond=None)
+                risk = realized_isotropic_test_mse(fit, truth, noise)
+                samples[r, j], ranks[r, j] = risk, rank
+                raw_rows.append((n, seed, r + 1, int(d), risk,
+                                 int(rank), float(singular[-1])))
+        for j, d in enumerate(dims):
+            expected = gaussian_test_mse(n, int(d), truth, noise)
+            diagnostic = risk_diagnostics(samples[:, j])
+            running = diagnostic.pop("running_mean")
+            running_rows.extend((n, int(d), r + 1, value)
+                                for r, value in enumerate(running))
+            for budget in budgets:
+                partial = risk_diagnostics(samples[:budget, j])
+                checkpoint_rows.append((n, int(d), budget, partial["mean"],
+                                        partial["median"], partial["q90"], partial["q99"],
+                                        partial["maximum"], partial["top_one_percent_share"],
+                                        expected,
+                                        abs(partial["mean"] / expected - 1)
+                                        if np.isfinite(expected) else ""))
+            summaries.append({"n": n, "d": int(d), "seed": seed,
+                              "repetitions": repetitions,
+                              "theoretical_expectation": float(expected)
+                              if np.isfinite(expected) else None,
+                              "expectation_status": "finite" if np.isfinite(expected) else "infinite",
+                              "relative_mean_error": abs(diagnostic["mean"] / expected - 1)
+                              if np.isfinite(expected) else None,
+                              "rank_deficient_count": int(np.sum(ranks[:, j] < min(n, d))),
+                              **diagnostic})
+            panel = 0 if d < n - 1 else (2 if d > n + 1 else 1)
+            ax = axes[row, panel]
+            line, = ax.plot(np.arange(1, repetitions + 1), running,
+                            label=f"d = n {int(d - n):+d}", lw=1.2)
+            if np.isfinite(expected):
+                ax.axhline(expected, color=line.get_color(), ls="--", lw=0.9, alpha=0.7)
+        for panel, title in enumerate(["Finite means below n", "Infinite population means",
+                                        "Finite means above n"]):
+            axes[row, panel].set(xscale="log", yscale="log",
+                                 xlabel="Independent repetitions", ylabel=f"Running mean MSE; n = {n}",
+                                 title=title)
+            axes[row, panel].legend(fontsize=8)
+            for budget in budgets[:-1]:
+                axes[row, panel].axvline(budget, color=GRAY, alpha=0.2, lw=0.7)
+    fig.suptitle("Rare designs can dominate a Monte Carlo mean (dashed: finite expectation)", fontsize=12)
+    save(fig, "double-descent-tails")
+    csv_save("double_descent_tail_risks", ["n", "seed", "replicate", "d", "test_mse",
+                                          "numerical_rank", "smallest_singular_value"], raw_rows)
+    csv_save("double_descent_running_means", ["n", "d", "repetitions", "running_mean_test_mse"],
+             running_rows)
+    csv_save("double_descent_checkpoints", ["n", "d", "repetitions", "mean", "median", "q90", "q99",
+                                           "maximum", "top_one_percent_share", "theoretical_expectation",
+                                           "relative_mean_error_if_finite"], checkpoint_rows)
+    return {"repetition_budgets": budgets, "offsets_from_n": offsets.tolist(),
+            "noise_variance": noise, "solver": "numpy.linalg.lstsq(rcond=None)",
+            "summaries": summaries}
 
 
 def gd_lab():
@@ -211,6 +293,7 @@ def main():
     metrics = {"runtime": {"python": platform.python_version(), "numpy": np.__version__,
                            "matplotlib": matplotlib.__version__},
                "ridge": ridge_lab(), "double_descent": double_descent_lab(),
+               "double_descent_tails": double_descent_tail_lab(),
                "gd": gd_lab(), "sgd": sgd_lab(), "uncertainty": uncertainty_lab()}
     (RESULTS / "metrics.json").write_text(json.dumps(metrics, indent=2, allow_nan=False)+"\n")
     fig, axes = plt.subplots(2, 2, figsize=(12, 7), layout="constrained")
@@ -246,12 +329,35 @@ Runtime: Python {platform.python_version()}, NumPy {np.__version__}, Matplotlib 
     report += """
 The normal curves are asymptotic references, not exact finite-time distributions. Initialization, discretization, and finite Monte Carlo sampling cause visible discrepancies. The PR average uses exponent 0.7, distinct from the 1/t last-iterate runs.
 
+## Double-descent tail diagnostic
+
+Two independent streams use n = 30 / 60, the same five-coordinate signal and noise variance 0.25. Within each stream, dimensions share each full design and response. Budgets 40, 240, and 1,200 are nested prefixes, not independent estimates. [Every realized risk](results/double_descent_tail_risks.csv), [all running means](results/double_descent_running_means.csv), and [budget/quantile checkpoints](results/double_descent_checkpoints.csv) are saved. The original 240-repetition experiment also saves [its individual risks](results/double_descent_risks.csv).
+
+![Running means around interpolation](../assets/double-descent-tails.png)
+
+The table reports 1,200 repetitions. “Top 1%” is the fraction of the total risk contributed by the largest 12 observations. Quantiles describe a different quantity from the mean. Relative error is defined only against a finite theoretical expectation; infinite expectations have no finite relative-error target.
+
+| n | d | Expected MSE | Mean | Median | 99th percentile | Maximum | Top 1% share | Relative mean error |
+|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+"""
+    for item in metrics["double_descent_tails"]["summaries"]:
+        expected = item["theoretical_expectation"]
+        target = f"{expected:.6g}" if expected is not None else "infinite"
+        error = f"{item['relative_mean_error']:.1%}" if expected is not None else "—"
+        report += (f"| {item['n']} | {item['d']} | {target} | {item['mean']:.6g} | "
+                   f"{item['median']:.6g} | {item['q99']:.6g} | {item['maximum']:.6g} | "
+                   f"{item['top_one_percent_share']:.1%} | {error} |\n")
+    report += """
+A finite expectation at d = n ± 2 does not ensure that 240 or 1,200 draws give a close estimate. The law of large numbers gives eventual convergence for integrable risks; it gives no useful finite-budget error guarantee here. At d = n − 1, n, n + 1 the positive-noise expectation is infinite. For iid nonnegative risks with infinite mean, the running mean diverges almost surely as the budget tends to infinity, although a finite prefix can look flat. No usual standard-error bars or mean confidence intervals are reported.
+
+The larger sample-size comparison also moves the interpolation threshold and changes its finite neighboring expectations. It is not a claim that increasing n uniformly improves risk for d = n + k. The numeric solver uses its default rank cutoff; raw ranks and smallest singular values make any truncation visible. Such a cutoff would change the ideal unregularized estimator on numerically rank-deficient draws, and finite runs cannot resolve arbitrarily rare singular events. Correlated features require a changed covariance and omitted-noise analysis. Reordering signal coordinates changes omitted energy and the curve, while the independent-Gaussian formula still applies with those reordered coefficients. Ridge regularization and noiseless critical cases require separate analysis.
+
 ## Limits of these checks
 
 The critical Gaussian dimensions have infinite expected test risk when effective noise is positive. A finite average of 240 realized risks remains finite and cannot estimate a finite value that does not exist. The median is intentionally labeled as a different statistic. Numerical GD trajectories illustrate a single quadratic. None of these experiments establish universal rates for neural networks or Adam. Platform-dependent linear algebra can change final digits even with identical seeds.
 """
     (ROOT / "labs" / "RESULTS.md").write_text(report, encoding="utf-8")
-    print("Generated five experiments, six figures, CSV measurements, and RESULTS.md.")
+    print("Generated five experiments plus a tail diagnostic, seven figures, CSV measurements, and RESULTS.md.")
 
 
 if __name__ == "__main__":

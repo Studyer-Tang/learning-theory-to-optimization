@@ -8,6 +8,7 @@ import numpy as np
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "labs"))
 from core import (gaussian_test_mse, heavy_ball, moving_average_form, quadratic_gaps,
                   quadratic_gd, ridge, scalar_clt_variance,
+                  realized_isotropic_test_mse, risk_diagnostics,
                   scalar_stationary_objective, scheduled_momentum)
 
 
@@ -66,6 +67,28 @@ class MathematicalChecks(unittest.TestCase):
         objective = scalar_stationary_objective(h, eta, s2)
         u = 2*objective/h
         self.assertAlmostEqual(u, (1-eta*h)**2*u + eta**2*s2)
+
+    def test_realized_risk_matches_an_exact_isotropic_test_population(self):
+        # The uniform distribution on +/- sqrt(3) e_j has covariance I_3.
+        # Add independent +/- 0.5 label noise: variance 0.25.
+        truth, fit = np.array([2., -1., 3.]), np.array([1., 0.5])
+        test_x = np.vstack([np.sqrt(3) * np.eye(3), -np.sqrt(3) * np.eye(3)])
+        errors = np.concatenate([test_x @ truth - test_x[:, :2] @ fit + noise
+                                 for noise in [-0.5, 0.5]])
+        self.assertAlmostEqual(realized_isotropic_test_mse(fit, truth, 0.25),
+                               float(np.mean(errors ** 2)))
+
+    def test_tail_diagnostics_keep_one_extreme_draw_visible(self):
+        risks = np.r_[np.ones(99), 10000.]
+        summary = risk_diagnostics(risks)
+        self.assertAlmostEqual(summary["running_mean"][98], 1)
+        self.assertAlmostEqual(summary["mean"], 100.99)
+        self.assertAlmostEqual(summary["median"], 1)
+        self.assertAlmostEqual(summary["maximum"], 10000)
+        self.assertAlmostEqual(summary["top_one_percent_share"], 10000 / 10099)
+        for invalid in [[], [np.inf], [-1]]:
+            with self.assertRaises(ValueError):
+                risk_diagnostics(invalid)
 
     def test_scalar_clt_lyapunov_and_optimal_gain(self):
         h, s2 = 2., 3.

@@ -83,4 +83,11 @@ $$\operatorname{Var}=(n/d)(1-n/d)B_d^2+\tau_d^2n/(d-n-1).$$
 
 Their sum is $\mathcal E_d-\sigma_y^2$. Random row-space orientation itself contributes variance, even before considering label noise. Double descent is a possible shape of the same decomposition, not a new error category.
 
-**Checkpoint:** establish the minimum-norm solution and explain why inverse existence is weaker than finite inverse expectation. Attempt E05–E06. The [double-descent lab](../labs/README.md) keeps the true signal fixed as $d$ varies and marks the excluded critical dimensions. Finite Monte Carlo averages near the threshold are not reliable estimates of an infinite expectation.
+**Checkpoint:** establish the minimum-norm solution and explain why inverse existence is weaker than finite inverse expectation. Attempt E05–E06. The [double-descent lab](../labs/README.md) keeps the true signal fixed as $d$ varies and marks the excluded critical dimensions. Its tail diagnostic saves individual risks, quantiles and running means for two sample sizes. At finite-expectation neighbors, finite-budget mean error can still be large; at the critical dimensions no finite expectation exists to estimate.
+
+For independent and identically distributed nonnegative risks $R_i$ with infinite mean, this last statement is stronger than mere instability: for each fixed $K$, the strong law applied to $\min(R_i,K)$ gives
+
+$$\liminf_{m\to\infty}\frac1m\sum_{i=1}^m R_i
+\ge \mathbb E\min(R_1,K)\quad\text{almost surely}.$$
+
+Take the countable intersection over positive integer $K$, then use monotone convergence as $K\to\infty$. The running mean tends to $+\infty$ almost surely. This is an asymptotic statement, not a guarantee that a particular finite prefix visibly rises.

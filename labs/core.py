@@ -49,6 +49,47 @@ def gaussian_test_mse(n, d, coefficients, noise_variance):
     return included * (1 - n / d) + effective * (1 + n / (d - n - 1))
 
 
+def realized_isotropic_test_mse(fit, coefficients, noise_variance):
+    """Conditional test MSE for independent standard-normal test coordinates.
+
+    This identity does not apply unchanged to correlated or non-unit-variance
+    features: their coefficient-error term uses the test covariance matrix.
+    """
+    fit = np.asarray(fit, dtype=float)
+    coefficients = np.asarray(coefficients, dtype=float)
+    if fit.ndim != 1 or coefficients.ndim != 1 or len(fit) > len(coefficients):
+        raise ValueError("require vectors and no fit beyond the coefficient vector")
+    if noise_variance < 0:
+        raise ValueError("noise variance must be nonnegative")
+    d = len(fit)
+    return float(noise_variance + np.sum(coefficients[d:] ** 2)
+                 + np.sum((fit - coefficients[:d]) ** 2))
+
+
+def risk_diagnostics(samples):
+    """Describe realized risks without asserting a finite population mean.
+
+    No standard error or confidence interval is inferred from these values.
+    The top 1% share uses ceil(0.01 * repetitions), including at least one risk.
+    """
+    samples = np.asarray(samples, dtype=float)
+    if samples.ndim != 1 or not len(samples) or not np.all(np.isfinite(samples)):
+        raise ValueError("require a nonempty finite vector of realized risks")
+    if np.any(samples < 0):
+        raise ValueError("risks must be nonnegative")
+    running = np.cumsum(samples) / np.arange(1, len(samples) + 1)
+    total = float(np.sum(samples))
+    count = max(1, int(np.ceil(0.01 * len(samples))))
+    return {"running_mean": running,
+            "mean": float(running[-1]),
+            "median": float(np.quantile(samples, 0.5)),
+            "q90": float(np.quantile(samples, 0.9)),
+            "q99": float(np.quantile(samples, 0.99)),
+            "maximum": float(np.max(samples)),
+            "top_one_percent_share": float(np.sum(np.sort(samples)[-count:]) / total)
+            if total else 0.0}
+
+
 def scalar_stationary_objective(h, step, noise_variance):
     if h <= 0 or not 0 < step < 2 / h:
         raise ValueError("unstable scalar step")
