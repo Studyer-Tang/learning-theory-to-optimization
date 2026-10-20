@@ -50,7 +50,7 @@ python -m unittest discover -s tests -v
 python labs/run_all.py
 ```
 
-Use Python 3.12, the version used for the recorded run and configured in CI. Experiments use NumPy and Matplotlib, synthetic data, and fixed random seeds. The commands write plots and machine-readable measurements to `assets/` and `labs/results/`. See [the reproducibility report](labs/RESULTS.md) for measured results, runtime versions, and limitations. Numerical checks supplement proofs; they do not prove universal convergence claims.
+CI uses Python 3.12; the latest recorded tail diagnostic used Python 3.13.15. Experiments use NumPy and Matplotlib, synthetic data, and fixed random seeds. Each run writes its plots, measurements, and report into a new dated directory under `runs/`, leaving the published reference results unchanged. Use `python labs/run_all.py --output-dir runs/my-experiment` to choose a new directory; existing paths are refused. See [the reproducibility report](labs/RESULTS.md) for measured results, runtime versions, and limitations. Numerical checks supplement proofs; they do not prove universal convergence claims.
 
 ## Learning record and scope
 

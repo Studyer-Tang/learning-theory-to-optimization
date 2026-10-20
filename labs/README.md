@@ -2,7 +2,7 @@
 
 [Home](../README.md) · [Recorded results](RESULTS.md)
 
-Run `python labs/run_all.py` from the repository root after installing `requirements.txt`. It generates five experiments and a double-descent tail diagnostic in one deterministic-seed run, writes CSV measurements and JSON metadata under `labs/results/`, and regenerates this edition's plots. No external dataset, network request, API key, or original PDF is needed by the code.
+Run `python labs/run_all.py` from the repository root after installing `requirements.txt`. It generates five experiments and a double-descent tail diagnostic in one deterministic-seed run, writes an independent run under `runs/<UTC timestamp>/`, and preserves this edition's recorded plots and measurements. Each run contains `assets/`, `labs/results/`, and `labs/RESULTS.md` with working relative links. To choose a destination, use `python labs/run_all.py --output-dir runs/my-experiment`; the path must not already exist. Failed runs may leave partial files in their new directory; a completed run ends with a generated report and a success message. No external dataset, network request, API key, or original PDF is needed by the code.
 
 ## 1. Ridge and selection
 
