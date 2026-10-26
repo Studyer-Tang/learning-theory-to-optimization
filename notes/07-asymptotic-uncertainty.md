@@ -2,7 +2,8 @@
 
 [Previous](06-sgd.md) · [Home](../README.md) · [Next](08-momentum.md)
 
-**Goal:** distinguish a finite-time error bound from a limiting distribution. Source connection: §2.5. Read [the probability toolkit](10-probability.md) first if $\Rightarrow$ or $o_P$ is unfamiliar. This chapter is prepared onward material, not a recorded completed learning milestone.
+[中文完整推导](zh/05-sgd-asymptotics.md)
+**Goal:** distinguish a finite-time error bound from a limiting distribution. Source connection: §2.5. Read [the probability toolkit](10-probability.md) first if $\Rightarrow$ or $o_P$ is unfamiliar. This is the older English overview; the expanded Chinese chapter supplies the detailed calculations. Documented study does not certify independent mastery.
 
 ## An error scale is not yet a distribution
 

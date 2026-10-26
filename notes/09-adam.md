@@ -2,6 +2,7 @@
 
 [Previous](08-momentum.md) · [Home](../README.md) · [Next](10-probability.md)
 
+[中文完整推导](zh/09-momentum-and-adaptation.md)
 **Goal:** understand coordinatewise scaling without importing an invalid convergence guarantee. Source connection: §2.7.
 
 ## Unpack one update

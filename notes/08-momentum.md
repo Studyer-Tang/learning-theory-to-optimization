@@ -2,6 +2,7 @@
 
 [Previous](07-asymptotic-uncertainty.md) · [Home](../README.md) · [Next](09-adam.md)
 
+[中文完整推导](zh/09-momentum-and-adaptation.md)
 **Goal:** understand the acceleration mechanism and its domain of validity. Source connection: §2.6.
 
 ## Memory changes the algorithm

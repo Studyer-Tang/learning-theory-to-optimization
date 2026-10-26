@@ -2,6 +2,23 @@
 
 [Home](../README.md) · [Exercises](../exercises/problems.md)
 
+## 中文证明索引
+
+| 结论或计算 | 完整推导所在篇目 |
+|---|---|
+| 条件均值、三项误差界、偏差—方差与岭回归 SVD | [风险与线性模型](../notes/zh/01-risk-and-linear-models.md) |
+| 随机投影、Schur 补、逆卡方矩及两侧风险 | [双下降](../notes/zh/02-double-descent.md) |
+| 二次目标谱递推、下降引理与两种 GD 速率 | [梯度下降](../notes/zh/03-gradient-descent.md) |
+| 条件小批量方差、递减步长、两种加权求和 | [SGD 有限时间界](../notes/zh/04-sgd-finite-time.md) |
+| 传播权重、协方差积分、Lindeberg、Lyapunov 与 PR | [SGD 渐近分布](../notes/zh/05-sgd-asymptotics.md) |
+| 分块余项、联合路径极限与自归一化区间 | [SGD 统计推断](../notes/zh/06-sgd-inference.md) |
+| 指数矩、McDiarmid 条件区间、偶数矩与双网 | [集中不等式](../notes/zh/07-concentration.md) |
+| 覆盖数体积、Sauer–Shelah、幽灵样本、对称化及收缩 | [一致收敛](../notes/zh/08-uniform-convergence.md) |
+| Heavy-ball 稳定性与最优根半径、经典极分解 | [动量与自适应方法](../notes/zh/09-momentum-and-adaptation.md) |
+| 迹、条件二次型、行空间/零空间正交与 SVD | [线性代数工具](../notes/zh/linear-algebra.md) |
+
+“完整推导”指这些学习结论的条件与计算已写出；鞅差 CLT、函数型 CLT 等基础定理仍在使用处作为明确输入，不声称从公理重新证明。数值检验不替代数学证明。
+
 ## Read the question before selecting a theorem
 
 Write five labels: objective, geometry, update, requested output, and requested metric. Then identify whether the randomness is in the dataset, in the optimizer, or both. A theorem that matches four of these labels may still be unusable.
@@ -32,4 +49,4 @@ Write five labels: objective, geometry, update, requested output, and requested 
 
 First try the problem without notes. Then consult only the hint. Next compare the decisive inequality with the solution. Finally change one condition and explain which step fails. Record the changed problem, not merely “reviewed theorem.”
 
-This is a practice method, not a prediction about a particular exam. No actual homework sheet or exam specification is included in the source, so these exercises are original training problems rather than official course answers.
+This is a practice method, not a prediction about a particular exam. The original E01–E20 exercises are training problems. The later Chinese Homework 4–5 solution sets are attributed separately and do not claim to be official course answers. No exam specification is inferred.

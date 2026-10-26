@@ -2,6 +2,7 @@
 
 [Previous](02-capacity-and-ridge.md) · [Home](../README.md) · [Next](04-geometry-and-gd.md)
 
+[中文完整推导](zh/02-double-descent.md)
 **Goal:** derive the prediction-error curve of one specified learning procedure, and understand why it is not a universal law. Source connection: §1.5. Related research: [Hastie et al.](https://arxiv.org/abs/1903.08560).
 
 ## Fix the data-generating problem first

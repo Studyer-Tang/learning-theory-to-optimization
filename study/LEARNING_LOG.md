@@ -1,6 +1,6 @@
 # Learning ledger
 
-This public record tracks the mathematical route and evidence of learning. It does not reproduce private dialogue or personal questions. Snapshot: 2026-10-01.
+This public record tracks the mathematical route and evidence of learning. It does not reproduce private dialogue or personal questions. Snapshot: 2026-10-26.
 
 ## What the status labels mean
 
@@ -8,20 +8,19 @@ This public record tracks the mathematical route and evidence of learning. It do
 - **Companion prepared:** a self-contained chapter is available for future study; reading completion is not claimed.
 - **Evidence pending:** the learner has not yet recorded an independently produced derivation, solution, or experiment interpretation.
 
-## The journey so far
+## Consolidated study
 
-| Stage | Mathematical focus | Reading status | Evidence still to produce |
+| Material | Documented coverage | Public notes | Independent evidence |
 |---|---|---|---|
-| 1 · Establish the foundations | Risk, model classes, validation, ridge | Foundation recap prepared; earlier independent coverage not documented | Derive the three-error bound and ridge normal equation |
-| 2 · Understand interpolation | §1.5, minimum norm, Gaussian test risk, critical dimensions | Reading covered | Solve E05–E06 without the solution; interpret the singularity in the risk formula |
-| 3 · Move from fits to algorithms | §2.1, quadratic GD, curvature, stable steps | Reading covered | Reconstruct the scalar multiplier and matrix eigencoordinate argument |
-| 4 · Learn reusable proof patterns | §§2.2–2.3, contraction and telescoping | Reading covered | Reproduce the convex $1/T$ proof and identify where monotonicity enters |
-| 5 · Introduce random updates | §2.4, conditional expectations, noise floors, averaging | Reading covered | Derive the conditional recursion and distinguish final from averaged output |
-| 6 · Consolidate through problems | Worked example, original problem set, reproducible labs | Study materials prepared | Attach independent solutions and short lab interpretations |
-| 7 · Study uncertainty and other optimizers | §§2.5–2.7, CLTs, momentum, Adam | Companion prepared; onward study | Verify local CLT assumptions and derive the heavy-ball roots |
-| 8 · Strengthen probability tools | Appendix A | Companion prepared; onward study | Explain convergence counterexamples and solve the delta-method exercise |
+| Chapter 1 | Risk, ERM, ridge, training/test error and double descent | [Chinese 01–02](../notes/zh/README.md), including inverse-Gram and projection calculations | Reconstruction without the notes remains to be recorded |
+| Chapter 2, GD | Spectral formula, descent lemma, convex and strongly convex rates | [Chinese 03](../notes/zh/03-gradient-descent.md) | Independent solutions remain to be recorded |
+| Chapter 2, SGD | Minibatch covariance, finite-time averaging, CLTs, batch means and self-normalization | [Chinese 04–06](../notes/zh/README.md) | Derivations are supplied resources, not evidence of independent mastery |
+| Chapter 2, optimizers | Momentum, adaptive updates, AdamW and Muon | [Chinese 09](../notes/zh/09-momentum-and-adaptation.md) | Distinguish quadratic proofs from general algorithm claims |
+| Chapter 3 | Concentration, covering, VC dimension and Rademacher bounds | [Chinese 07–08](../notes/zh/README.md) | Independent proof reconstruction remains to be recorded |
+| Homework 4–5 | Complete worked solutions prepared from the mathematical study | [HW4](../exercises/zh/homework04.md), [HW5](../exercises/zh/homework05.md) | Submission, grading and independent completion are not claimed |
+| Probability appendix | Existing English reference | [Probability toolkit](../notes/10-probability.md) | Separate reference, not a new reading-completion claim |
 
-The current reading endpoint is §2.4. The next useful activity is consolidation, not automatically increasing the page count. The repository contains explanations and solutions as learning resources; their existence is not evidence that the learner has completed them.
+The 2026-10-26 update covers the mathematical discussion through Chapter 3 of the later source. Chapter 4 and reinforcement-learning topics have not been added. No personal evaluations or dialogue transcripts are part of this ledger.
 
 ## Conceptual milestones
 
