@@ -1,11 +1,13 @@
 """Generate synthetic experiments, plots, CSV measurements, and a run report.
 
-Run from the repository root with: python labs/run_all.py
+Run with: python labs/run_all.py [--output-dir NEW_DIRECTORY]
 No network or input dataset is used. Seeds are separate for each experiment.
 """
 from __future__ import annotations
 
+import argparse
 import csv
+from datetime import datetime, timezone
 import json
 import platform
 from pathlib import Path
@@ -20,24 +22,32 @@ from core import (gaussian_test_mse, quadratic_gaps, quadratic_gd, ridge,
                   scalar_clt_variance, scalar_stationary_objective)
 
 ROOT = Path(__file__).resolve().parents[1]
-ASSETS = ROOT / "assets"
-RESULTS = ROOT / "labs" / "results"
 BLUE, ORANGE, GREEN, GRAY = "#2563eb", "#e67e22", "#159a80", "#64748b"
 
 
-def save(fig, name):
-    fig.savefig(ASSETS / f"{name}.png", dpi=160, bbox_inches="tight")
-    plt.close(fig)
+class RunOutput:
+    """An independent run directory; never reuse a published or previous run."""
+
+    def __init__(self, root):
+        self.root = Path(root)
+        self.root.mkdir(parents=True, exist_ok=False)
+        self.assets = self.root / "assets"
+        self.results = self.root / "labs" / "results"
+        self.assets.mkdir()
+        self.results.mkdir(parents=True)
+
+    def save(self, fig, name):
+        fig.savefig(self.assets / f"{name}.png", dpi=160, bbox_inches="tight")
+        plt.close(fig)
+
+    def csv_save(self, name, columns, rows):
+        with (self.results / f"{name}.csv").open("w", newline="", encoding="utf-8") as out:
+            writer = csv.writer(out, lineterminator="\n")
+            writer.writerow(columns)
+            writer.writerows(rows)
 
 
-def csv_save(name, columns, rows):
-    with (RESULTS / f"{name}.csv").open("w", newline="", encoding="utf-8") as out:
-        writer = csv.writer(out, lineterminator="\n")
-        writer.writerow(columns)
-        writer.writerows(rows)
-
-
-def ridge_lab():
+def ridge_lab(output):
     rng = np.random.default_rng(1101)
     n, d = 40, 65
     truth = np.zeros(d)
@@ -55,7 +65,7 @@ def ridge_lab():
     selected = int(np.argmin(validation))
     # Test labels are evaluated only after the validation choice is frozen.
     test_loss = float(np.mean((Z @ fits[selected] - zy) ** 2) / 2)
-    csv_save("ridge", ["lambda", "training_half_mse", "validation_half_mse"],
+    output.csv_save("ridge", ["lambda", "training_half_mse", "validation_half_mse"],
              zip(penalties, train, validation))
     fig, ax = plt.subplots(figsize=(8, 4.7), layout="constrained")
     ax.plot(penalties, train, label="Training", color=BLUE)
@@ -66,13 +76,13 @@ def ridge_lab():
     ax.set_xscale("symlog", linthresh=1e-5)
     ax.set_xlim(0, float(penalties[-1]))
     ax.legend()
-    save(fig, "ridge")
+    output.save(fig, "ridge")
     return {"seed": 1101, "n": n, "d": d,
             "selected_lambda": float(penalties[selected]), "test_half_mse": test_loss,
             "minimum_training_increment": float(np.min(np.diff(train)))}
 
 
-def double_descent_lab():
+def double_descent_lab(output):
     rng = np.random.default_rng(1102)
     n, max_d, repetitions, noise = 30, 80, 240, 0.25
     truth = np.zeros(max_d)
@@ -89,10 +99,10 @@ def double_descent_lab():
             training[r, j] = np.mean((X[:, :d] @ fit - y) ** 2)
     theoretical = np.array([gaussian_test_mse(n, int(d), truth, noise) for d in dims])
     means, medians = samples.mean(axis=0), np.median(samples, axis=0)
-    csv_save("double_descent_risks", ["replicate", "d", "test_mse", "training_mse"],
+    output.csv_save("double_descent_risks", ["replicate", "d", "test_mse", "training_mse"],
              ((r + 1, int(d), samples[r, j], training[r, j])
               for r in range(repetitions) for j, d in enumerate(dims)))
-    csv_save("double_descent", ["d", "theoretical_test_mse", "finite_run_mean_test_mse",
+    output.csv_save("double_descent", ["d", "theoretical_test_mse", "finite_run_mean_test_mse",
                                 "finite_run_median_test_mse", "mean_training_mse"],
              zip(dims, theoretical, means, medians, training.mean(axis=0)))
     fig, ax = plt.subplots(figsize=(9, 5), layout="constrained")
@@ -105,7 +115,7 @@ def double_descent_lab():
     ax.set(yscale="log", xlabel="Retained coordinates d; fixed n = 30", ylabel="Test MSE (log scale)",
            title="Double descent for a fixed Gaussian signal")
     ax.legend(fontsize=8)
-    save(fig, "double-descent")
+    output.save(fig, "double-descent")
     finite_far = (dims <= 22) | (dims >= 40)
     relative = np.abs(means[finite_far] / theoretical[finite_far] - 1)
     return {"seed": 1102, "n": n, "repetitions": repetitions,
@@ -114,7 +124,7 @@ def double_descent_lab():
             "max_training_mse_after_interpolation": float(training[:, dims >= n].max())}
 
 
-def double_descent_tail_lab():
+def double_descent_tail_lab(output):
     """Nested repetition budgets and two sample sizes around interpolation.
 
     Each n has an independent stream. Dimensions within a replicate share X/y;
@@ -179,12 +189,12 @@ def double_descent_tail_lab():
             for budget in budgets[:-1]:
                 axes[row, panel].axvline(budget, color=GRAY, alpha=0.2, lw=0.7)
     fig.suptitle("Rare designs can dominate a Monte Carlo mean (dashed: finite expectation)", fontsize=12)
-    save(fig, "double-descent-tails")
-    csv_save("double_descent_tail_risks", ["n", "seed", "replicate", "d", "test_mse",
+    output.save(fig, "double-descent-tails")
+    output.csv_save("double_descent_tail_risks", ["n", "seed", "replicate", "d", "test_mse",
                                           "numerical_rank", "smallest_singular_value"], raw_rows)
-    csv_save("double_descent_running_means", ["n", "d", "repetitions", "running_mean_test_mse"],
+    output.csv_save("double_descent_running_means", ["n", "d", "repetitions", "running_mean_test_mse"],
              running_rows)
-    csv_save("double_descent_checkpoints", ["n", "d", "repetitions", "mean", "median", "q90", "q99",
+    output.csv_save("double_descent_checkpoints", ["n", "d", "repetitions", "mean", "median", "q90", "q99",
                                            "maximum", "top_one_percent_share", "theoretical_expectation",
                                            "relative_mean_error_if_finite"], checkpoint_rows)
     return {"repetition_budgets": budgets, "offsets_from_n": offsets.tolist(),
@@ -192,7 +202,7 @@ def double_descent_tail_lab():
             "summaries": summaries}
 
 
-def gd_lab():
+def gd_lab(output):
     H = np.diag([1.0, 9.0])
     initial = np.array([1.0, 1.0])
     steps = [0.08, 1/9, 0.2, 2/9, 0.24]
@@ -211,12 +221,12 @@ def gd_lab():
     axes[1].set(title="High-curvature coordinate", xlabel="Updates", ylabel="Error coordinate")
     axes[0].legend(fontsize=8)
     axes[1].axhline(0, color=GRAY, lw=0.7)
-    save(fig, "gd-stability")
-    csv_save("gd", ["step", "update", "error_low", "error_high", "objective_gap"], rows)
+    output.save(fig, "gd-stability")
+    output.csv_save("gd", ["step", "update", "error_low", "error_high", "objective_gap"], rows)
     return {"eigenvalues": [1, 9], "steps": summaries}
 
 
-def sgd_lab():
+def sgd_lab(output):
     rng = np.random.default_rng(1103)
     paths, updates, h, sigma2, constant = 12000, 300, 2.0, 1.0, 0.15
     x_fixed = np.full(paths, 3.0)
@@ -242,15 +252,15 @@ def sgd_lab():
     ax.axhline(floor, color=ORANGE, alpha=0.6, ls=":")
     ax.set(xlabel="Updates", ylabel="Expected objective gap", title="Contraction with noise: a solvable scalar example")
     ax.legend(fontsize=8)
-    save(fig, "sgd-noise")
-    csv_save("sgd", ["update", "mc_fixed", "mc_decay", "exact_fixed", "exact_decay"], rows)
+    output.save(fig, "sgd-noise")
+    output.csv_save("sgd", ["update", "mc_fixed", "mc_decay", "exact_fixed", "exact_decay"], rows)
     return {"seed": 1103, "paths": paths, "updates": updates,
             "exact_stationary_objective": floor,
             "mc_final_fixed": float(data[-1, 1]), "mc_final_decay": float(data[-1, 2]),
             "exact_final_decay": float(data[-1, 4])}
 
 
-def uncertainty_lab():
+def uncertainty_lab(output):
     rng = np.random.default_rng(1104)
     paths, updates, h = 5000, 5000, 2.0
     x = np.ones((3, paths))
@@ -277,33 +287,31 @@ def uncertainty_lab():
                           "empirical_scaled_variance": float(np.var(scaled[i], ddof=1)),
                           "empirical_scaled_mean": float(np.mean(scaled[i]))})
     axes[0].legend(fontsize=8)
-    save(fig, "uncertainty")
-    csv_save("uncertainty", ["replicate", "final_gain_half", "final_gain_one", "pr_average"],
+    output.save(fig, "uncertainty")
+    output.csv_save("uncertainty", ["replicate", "final_gain_half", "final_gain_one", "pr_average"],
              ((i, *scaled[:, i]) for i in range(paths)))
     return {"seed": 1104, "paths": paths, "updates": updates, "methods": summaries}
 
 
-def main():
-    ASSETS.mkdir(exist_ok=True)
-    RESULTS.mkdir(exist_ok=True)
+def run(output):
     plt.rcdefaults()
     plt.rcParams.update({"font.family": "DejaVu Sans", "font.size": 10, "axes.spines.top": False,
                          "axes.spines.right": False, "axes.titleweight": "bold",
                          "axes.grid": True, "grid.alpha": 0.16})
     metrics = {"runtime": {"python": platform.python_version(), "numpy": np.__version__,
                            "matplotlib": matplotlib.__version__},
-               "ridge": ridge_lab(), "double_descent": double_descent_lab(),
-               "double_descent_tails": double_descent_tail_lab(),
-               "gd": gd_lab(), "sgd": sgd_lab(), "uncertainty": uncertainty_lab()}
-    (RESULTS / "metrics.json").write_text(json.dumps(metrics, indent=2, allow_nan=False)+"\n")
+               "ridge": ridge_lab(output), "double_descent": double_descent_lab(output),
+               "double_descent_tails": double_descent_tail_lab(output),
+               "gd": gd_lab(output), "sgd": sgd_lab(output), "uncertainty": uncertainty_lab(output)}
+    (output.results / "metrics.json").write_text(json.dumps(metrics, indent=2, allow_nan=False)+"\n", encoding="utf-8")
     fig, axes = plt.subplots(2, 2, figsize=(12, 7), layout="constrained")
     for ax, name, title in zip(axes.flat,
                               ["ridge", "double-descent", "gd-stability", "sgd-noise"],
                               ["Generalization", "Interpolation", "Deterministic progress", "Stochastic progress"]):
-        ax.imshow(plt.imread(ASSETS / f"{name}.png"))
+        ax.imshow(plt.imread(output.assets / f"{name}.png"))
         ax.axis("off")
         ax.set_title(title, fontsize=12)
-    save(fig, "overview")
+    output.save(fig, "overview")
     r, dd, sg = metrics["ridge"], metrics["double_descent"], metrics["sgd"]
     report = f"""# Reproducibility report
 
@@ -356,8 +364,20 @@ The larger sample-size comparison also moves the interpolation threshold and cha
 
 The critical Gaussian dimensions have infinite expected test risk when effective noise is positive. A finite average of 240 realized risks remains finite and cannot estimate a finite value that does not exist. The median is intentionally labeled as a different statistic. Numerical GD trajectories illustrate a single quadratic. None of these experiments establish universal rates for neural networks or Adam. Platform-dependent linear algebra can change final digits even with identical seeds.
 """
-    (ROOT / "labs" / "RESULTS.md").write_text(report, encoding="utf-8")
-    print("Generated five experiments plus a tail diagnostic, seven figures, CSV measurements, and RESULTS.md.")
+    (output.root / "labs" / "RESULTS.md").write_text(report, encoding="utf-8")
+    print(f"Generated five experiments and a tail diagnostic in {output.root}")
+
+
+def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--output-dir", type=Path, help="new directory; existing paths are refused")
+    args = parser.parse_args()
+    destination = args.output_dir or ROOT / "runs" / datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%S.%fZ")
+    try:
+        output = RunOutput(destination)
+    except OSError as error:
+        parser.error(f"cannot create a fresh output directory: {error}")
+    run(output)
 
 
 if __name__ == "__main__":

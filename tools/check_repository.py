@@ -5,7 +5,7 @@ import sys
 from urllib.parse import unquote
 
 ROOT = Path(__file__).resolve().parents[1]
-EXCLUDED = {".git", ".venv", "__pycache__"}
+EXCLUDED = {".git", ".venv", "__pycache__", "runs"}
 errors = []
 files = [p for p in ROOT.rglob("*") if p.is_file()
          and not any(part in EXCLUDED for part in p.relative_to(ROOT).parts)]

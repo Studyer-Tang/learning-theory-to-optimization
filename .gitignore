@@ -9,3 +9,6 @@ __pycache__/
 .cache/
 private/
 drafts-private/
+
+# Independent lab reproductions
+runs/
