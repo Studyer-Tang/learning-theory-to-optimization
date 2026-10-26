@@ -13,6 +13,11 @@ These notes distinguish explanatory corrections from extensions. They are not a 
 7. **Heavy-ball root factors are asymptotic.** Repeated roots can yield $tq^t$. The source correctly states a root-rate claim; a simplified pure-geometric finite-time bound could be false at the optimal endpoints.
 8. **Noise floors are upper-bound scales in general.** The scalar quadratic lab has an exact stationary calculation; an upper bound for a general SGD problem does not establish a matching positive lower bound.
 9. **Critical dimensions cannot be interpolated numerically into a theorem.** Finite inverse matrices on individual Gaussian samples do not imply a finite inverse expectation. The double-descent plot excludes dimensions where the expected test MSE is infinite with positive effective noise.
-10. **Source numbering.** The supplied document goes from §2.7 to §2.9. The companion covers the actual content without manufacturing an absent section.
+10. **Source numbering.** The included older PDF goes from §2.7 to §2.9; the later version includes §2.8 on AdamW and Muon. The crosswalk distinguishes both versions.
+
+11. **A terminal CLT is weaker than a functional CLT.** Self-normalization needs a path limit and a joint limit for the numerator and denominator. Its random scale is not a consistent covariance estimate, and its critical values are not standard-normal ones. See [the detailed proof](zh/06-sgd-inference.md).
+12. **Batch means are not gradient minibatches.** Long, growing blocks summarize dependence in one parameter trajectory. The sufficient block-length and moment assumptions used here are stated explicitly; independent noise at the optimum does not make the iterates independent.
+13. **Rademacher conventions affect constants.** The main Chinese chapter uses a supremum of absolute signed sums; Homework 5 begins with a one-sided supremum. Its proof identifies when class symmetry permits moving between the two.
+14. **Muon polynomial accuracy is a separate question.** The modified quintic has value 0.701 at 1. The classical cubic Newton–Schulz convergence proof does not apply unchanged to it.
 
 The original source is preserved unchanged so these annotations remain distinguishable from the author's text.

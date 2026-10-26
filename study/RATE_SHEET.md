@@ -1,6 +1,6 @@
 # Rate sheet with assumptions attached
 
-[Home](../README.md) · [Notation](../notes/notation.md)
+[Home](../README.md) · [Notation](../notes/notation.md) · [中文推导](../notes/zh/04-sgd-finite-time.md)
 
 Let $\Delta_T=\Phi(\theta_T)-\Phi(\theta^\star)$ and $e_T=\theta_T-\theta^\star$. Constants hidden below may depend on initial distance, curvature, and noise. A displayed rate is an upper-bound order, not an exact trajectory.
 
@@ -16,6 +16,7 @@ Let $\Delta_T=\Phi(\theta_T)-\Phi(\theta^\star)$ and $e_T=\theta_T-\theta^\star$
 | Weighted strongly convex average | Same moment setting; $2/[\mu(t+1)]$ and weights $t$ | Expected averaged gap $O(T^{-1})$ |
 | Convex SGD | Unbiased bounded second moment, horizon-tuned constant step, equal-weight output | Expected gap $O(T^{-1/2})$ |
 | Convex SGD | Same; $c/\sqrt t$ and step-size-weighted output | Expected gap $O(\log T/\sqrt T)$ under this bound |
+| Smooth convex SGD | Convex and smooth, unbiased noise variance bound; horizon-tuned step and average | Expected gap at most $\beta R^2/(2T)+R\sigma/\sqrt T$ |
 | Final SGD CLT | Local stability, regularity, moments; $a/t$, $2a\lambda_{\min}(H)>1$ | $\sqrt T e_T\Rightarrow N(0,V_a)$ |
 | PR CLT | Local assumptions; $at^{-\alpha}$, $1/2<\alpha<1$, arithmetic average | Sandwich covariance $H^{-1}S(H^{-1})^\top$ |
 | Heavy-ball | Deterministic positive-definite quadratic, optimal parameters | Asymptotic parameter root factor $(\sqrt\kappa-1)/(\sqrt\kappa+1)$ |
@@ -24,3 +25,7 @@ Let $\Delta_T=\Phi(\theta_T)-\Phi(\theta^\star)$ and $e_T=\theta_T-\theta^\star$
 | Vanilla Adam | Only strong convexity and smoothness | No general rate justified by these assumptions alone |
 
 Under strong convexity, $\mathbb E\|e_T\|^2\le2\mathbb E\Delta_T/\mu$. A parameter-norm bound requires a square root. In the merely convex case there is no comparable uniform distance rate to a designated optimizer from the objective bound alone.
+
+## Distributional inference
+
+[中文推导](../notes/zh/06-sgd-inference.md) distinguishes a consistent covariance estimate from a self-normalizing random scale. A terminal CLT alone does not establish the path-level limit used by self-normalization. The resulting pivot has a Brownian-bridge denominator and uses its own quantiles, rather than standard-normal ones.

@@ -6,4 +6,4 @@ The repository maintainer confirmed ownership or permission to redistribute the 
 
 The companion chapters are separately authored educational explanations of the mathematical material. Their examples, exercises, diagrams, and synthetic experiments are original to this repository. No source-page screenshots are used as new figures.
 
-PDF viewer page 3 corresponds to printed page 1. The source skips from §2.7 to §2.9; the companion does not invent a missing §2.8. The learning ledger records reading coverage separately from the material prepared for future study.
+PDF viewer page 3 corresponds to printed page 1. This older source skips from §2.7 to §2.9. The later version adds §2.8; it is used by the expanded Chinese notes but is not included here. See the [version crosswalk](SECTION_MAP.md). The learning ledger records reading coverage separately from the material prepared for future study.
